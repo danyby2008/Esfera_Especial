@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Para Alguien Especial ❤️</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      overflow: hidden;
+      background-color: #000000;
+      font-family: 'Poppins', sans-serif;
+      color: #ffffff;
+      touch-action: none;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Encabezado Principal */
+    .ui-layer {
+      position: absolute;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+      width: 95%;
+    }
+
+    .title {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, #ff9a9e, #fecfef, #a1c4fd, #ff758c);
+      background-size: 200% 200%;
+      animation: gradientShift 6s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 18px rgba(255, 154, 158, 0.7));
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .subtitle {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 300;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+
+  <!-- Bibliotecas Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div class="ui-layer">
+    <h1 class="title">La persona mas bella y especial que he conocido</h1>
+    <p class="subtitle">✨ Gira la esfera para descubrir ✨</p>
+  </div>
+
+  <div id="canvas-container"></div>
+  <div class="hint">✦ Toca y desliza en la pantalla ✦</div>
+
+  <script>
+    // 1. Escena y Renderizador
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 12;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Controles táctiles
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.04;
+    controls.rotateSpeed = 0.8;
+
+    const mainGroup = new THREE.Group();
+    scene.add(mainGroup);
+
+    // 2. Núcleo Cristalino y Esfera Interior
+    const coreGeo = new THREE.IcosahedronGeometry(2.3, 3);
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0xff3b6f,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.25
+    });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    mainGroup.add(coreMesh);
+
+    const innerGeo = new THREE.SphereGeometry(1.6, 32, 32);
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: 0xffa0b4,
+      transparent: true,
+      opacity: 0.2
+    });
+    const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+    mainGroup.add(innerMesh);
+
+    // 3. FIRMA CENTRADA "Att: Dany ❤️️"
+    function createCenterSignature() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 512;
+      canvas.height = 256;
+
+      ctx.shadowColor = "#ff758c";
+      ctx.shadowBlur = 25;
+
+      ctx.font = "Italic Bold 60px 'Great Vibes', cursive";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("Att: Dany ❤️", 256, 140);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(4.2, 2.1, 1);
+      sprite.renderOrder = 999;
+      return sprite;
+    }
+
+    const signatureSprite = createCenterSignature();
+    mainGroup.add(signatureSprite);
+
+    // 4. Polvo Estelar Galáctico (2500 Partículas)
+    const particleCount = 2500;
+    const particleGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    const radius = 4.8;
+    const colorChoices = [
+      new THREE.Color(0xff85a2),
+      new THREE.Color(0xfbb1bd),
+      new THREE.Color(0xc0a0ed),
+      new THREE.Color(0x90e0ef),
+      new THREE.Color(0xffe29f),
+      new THREE.Color(0xffffff)
+    ];
+
+    for (let i = 0; i < particleCount; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = radius + (Math.random() - 0.5) * 2.8;
+
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+
+      const color = colorChoices[Math.floor(Math.random() * colorChoices.length)];
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
+    }
+
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const particleMat = new THREE.PointsMaterial({
+      size: 0.075,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    const particles = new THREE.Points(particleGeo, particleMat);
+    mainGroup.add(particles);
+
+    // 5. Anillos Neón Orbitando
+    function createRing(rInner, rOuter, colorHex, rotX, rotY) {
+      const ringGeo = new THREE.RingGeometry(rInner, rOuter, 64);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.45
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = rotX;
+      ring.rotation.y = rotY;
+      mainGroup.add(ring);
+      return ring;
+    }
+
+    const ring1 = createRing(5.6, 5.64, 0xff85a2, Math.PI / 3, Math.PI / 6);
+    const ring2 = createRing(6.4, 6.43, 0x90e0ef, -Math.PI / 4, Math.PI / 4);
+
+    // 6. Frases Personalizadas
+    const frases = [
+      "Eres Hermosa 💖",
+      "Persona Admirable ⭐",
+      "Tu Personalidad Me Encanta ✨",
+      "Voz Hermosa 🎶",
+      "Me Impresionas Siempre 🌟",
+      "Eres Gentil 🕊️",
+      "Tu Sonrisa 😊",
+      "Dios Te Ama 🙏❤️",
+      "Nunca Te Rindas 💪",
+      "Siempre Estare Contigo 🤝❤️"
+    ];
+
+    function createTextSprite(text) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 512;
+      canvas.height = 128;
+
+      ctx.font = "Bold 30px 'Poppins', sans-serif";
+      ctx.textAlign = "center";
+      
+      ctx.shadowColor = "#ff85a2";
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(text, 256, 70);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(3.5, 0.85, 1);
+      return sprite;
+    }
+
+    frases.forEach((txt, idx) => {
+      const sprite = createTextSprite(txt);
+      
+      const phi = Math.acos(-1 + (2 * idx) / frases.length);
+      const theta = Math.sqrt(frases.length * Math.PI) * phi;
+      const dist = 6.2;
+
+      sprite.position.x = dist * Math.cos(theta) * Math.sin(phi);
+      sprite.position.y = dist * Math.sin(theta) * Math.sin(phi);
+      sprite.position.z = dist * Math.cos(phi);
+
+      mainGroup.add(sprite);
+    });
+
+    // 7. Animaciones de Rotación y Pulsación
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsedTime = clock.getElapsedTime();
+
+      // Rotación suave del universo
+      mainGroup.rotation.y += 0.0025;
+      coreMesh.rotation.x += 0.003;
+      innerMesh.rotation.y -= 0.005;
+      ring1.rotation.z += 0.002;
+      ring2.rotation.z -= 0.002;
+
+      // Latido constante de la firma "Att: Dany ❤️"
+      const scalePulsate = 4.2 + Math.sin(elapsedTime * 2.5) * 0.2;
+      signatureSprite.scale.set(scalePulsate, scalePulsate * 0.5, 1);
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Redimensionado táctil
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
