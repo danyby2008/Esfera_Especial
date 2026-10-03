@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Para Alguien Especial ❤️</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:ital,wght@0,300;0,400;0,600;1,300&display=swap');
 
     * {
       box-sizing: border-box;
@@ -44,13 +44,13 @@
 
     .title {
       font-family: 'Great Vibes', cursive;
-      font-size: 2.5rem;
-      background: linear-gradient(45deg, #ff9a9e, #fecfef, #a1c4fd, #ff758c);
-      background-size: 200% 200%;
-      animation: gradientShift 6s ease infinite;
+      font-size: 2.7rem;
+      background: linear-gradient(45deg, #ff758c, #ff7eb3, #fecfef, #a1c4fd, #ff758c);
+      background-size: 300% 300%;
+      animation: gradientShift 5s ease infinite;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 18px rgba(255, 154, 158, 0.7));
+      filter: drop-shadow(0 0 20px rgba(255, 117, 140, 0.8));
       margin-bottom: 2px;
       line-height: 1.2;
     }
@@ -62,11 +62,12 @@
     }
 
     .subtitle {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.75);
       font-weight: 300;
-      letter-spacing: 2px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     }
 
     .hint {
@@ -76,15 +77,64 @@
       transform: translateX(-50%);
       z-index: 10;
       font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.5);
       letter-spacing: 1.5px;
       text-transform: uppercase;
       pointer-events: none;
     }
 
+    /* Botón Flotante de Música */
+    .music-btn {
+      position: absolute;
+      bottom: 25px;
+      right: 25px;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      padding: 10px 18px;
+      color: #ffffff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 0 20px rgba(255, 117, 140, 0.4);
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .music-btn:hover {
+      background: rgba(255, 117, 140, 0.35);
+      box-shadow: 0 0 30px rgba(255, 117, 140, 0.7);
+      transform: scale(1.05);
+    }
+
+    .music-btn.playing {
+      background: rgba(255, 117, 140, 0.4);
+      border-color: #ff758c;
+      animation: pulseMusic 2s infinite;
+    }
+
+    @keyframes pulseMusic {
+      0% { box-shadow: 0 0 12px rgba(255, 117, 140, 0.4); }
+      50% { box-shadow: 0 0 26px rgba(255, 117, 140, 0.9); }
+      100% { box-shadow: 0 0 12px rgba(255, 117, 140, 0.4); }
+    }
+
     @media (max-width: 600px) {
       .title {
-        font-size: 1.8rem;
+        font-size: 1.9rem;
+      }
+      .music-btn {
+        bottom: 20px;
+        right: 15px;
+        padding: 8px 14px;
+        font-size: 0.75rem;
       }
     }
   </style>
@@ -103,11 +153,44 @@
   <div id="canvas-container"></div>
   <div class="hint">✦ Toca y desliza en la pantalla ✦</div>
 
+  <!-- Botón de Música -->
+  <button id="musicToggle" class="music-btn">
+    <span id="musicIcon">🎵</span>
+    <span id="musicText">Música</span>
+  </button>
+
+  <!-- Elemento de Audio -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg" />
+  </audio>
+
   <script>
+    // Configuración de audio
+    const musicBtn = document.getElementById('musicToggle');
+    const musicIcon = document.getElementById('musicIcon');
+    const musicText = document.getElementById('musicText');
+    const bgMusic = document.getElementById('bgMusic');
+
+    bgMusic.volume = 0.4;
+
+    musicBtn.addEventListener('click', () => {
+      if (bgMusic.paused) {
+        bgMusic.play();
+        musicBtn.classList.add('playing');
+        musicIcon.textContent = '🔊';
+        musicText.textContent = 'Pausar';
+      } else {
+        bgMusic.pause();
+        musicBtn.classList.remove('playing');
+        musicIcon.textContent = '🎵';
+        musicText.textContent = 'Música';
+      }
+    });
+
     // 1. Escena y Renderizador
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(0x020108);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 12;
@@ -117,7 +200,6 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Controles táctiles
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.04;
@@ -126,37 +208,37 @@
     const mainGroup = new THREE.Group();
     scene.add(mainGroup);
 
-    // 2. Núcleo Cristalino y Esfera Interior
+    // 2. Núcleo Cristalino
     const coreGeo = new THREE.IcosahedronGeometry(2.3, 3);
     const coreMat = new THREE.MeshBasicMaterial({
-      color: 0xff3b6f,
+      color: 0xff2a6d,
       wireframe: true,
       transparent: true,
-      opacity: 0.25
+      opacity: 0.3
     });
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
     mainGroup.add(coreMesh);
 
     const innerGeo = new THREE.SphereGeometry(1.6, 32, 32);
     const innerMat = new THREE.MeshBasicMaterial({
-      color: 0xffa0b4,
+      color: 0xff85a2,
       transparent: true,
-      opacity: 0.2
+      opacity: 0.22
     });
     const innerMesh = new THREE.Mesh(innerGeo, innerMat);
     mainGroup.add(innerMesh);
 
-    // 3. FIRMA CENTRADA "Att: Dany ❤️️"
+    // 3. FIRMA "Att: Dany ❤"
     function createCenterSignature() {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = 512;
       canvas.height = 256;
 
-      ctx.shadowColor = "#ff758c";
-      ctx.shadowBlur = 25;
+      ctx.shadowColor = "#ff4d6d";
+      ctx.shadowBlur = 30;
 
-      ctx.font = "Italic Bold 60px 'Great Vibes', cursive";
+      ctx.font = "Italic Bold 62px 'Great Vibes', cursive";
       ctx.textAlign = "center";
       ctx.fillStyle = "#ffffff";
       ctx.fillText("Att: Dany ❤️", 256, 140);
@@ -164,7 +246,7 @@
       const texture = new THREE.CanvasTexture(canvas);
       const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
       const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(4.2, 2.1, 1);
+      sprite.scale.set(4.3, 2.15, 1);
       sprite.renderOrder = 999;
       return sprite;
     }
@@ -172,19 +254,19 @@
     const signatureSprite = createCenterSignature();
     mainGroup.add(signatureSprite);
 
-    // 4. Polvo Estelar Galáctico (2500 Partículas)
-    const particleCount = 2500;
+    // 4. Polvo Estelar Principal
+    const particleCount = 2800;
     const particleGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
 
     const radius = 4.8;
     const colorChoices = [
+      new THREE.Color(0xff4d6d),
       new THREE.Color(0xff85a2),
       new THREE.Color(0xfbb1bd),
-      new THREE.Color(0xc0a0ed),
+      new THREE.Color(0xe0aaff),
       new THREE.Color(0x90e0ef),
-      new THREE.Color(0xffe29f),
       new THREE.Color(0xffffff)
     ];
 
@@ -193,7 +275,7 @@
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
       const phi = Math.acos(2.0 * v - 1.0);
-      const r = radius + (Math.random() - 0.5) * 2.8;
+      const r = radius + (Math.random() - 0.5) * 3.0;
 
       positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
@@ -209,7 +291,7 @@
     particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const particleMat = new THREE.PointsMaterial({
-      size: 0.075,
+      size: 0.08,
       vertexColors: true,
       transparent: true,
       opacity: 0.95
@@ -218,14 +300,145 @@
     const particles = new THREE.Points(particleGeo, particleMat);
     mainGroup.add(particles);
 
-    // 5. Anillos Neón Orbitando
+    // 5. Partículas Ascendentes Flotantes
+    const floatingCount = 90;
+    const floatingGeo = new THREE.BufferGeometry();
+    const floatingPos = new Float32Array(floatingCount * 3);
+    const floatingSpeed = [];
+
+    for(let i=0; i < floatingCount; i++) {
+      floatingPos[i*3] = (Math.random() - 0.5) * 18;
+      floatingPos[i*3 + 1] = (Math.random() - 0.5) * 18;
+      floatingPos[i*3 + 2] = (Math.random() - 0.5) * 18;
+      floatingSpeed.push(0.01 + Math.random() * 0.02);
+    }
+    floatingGeo.setAttribute('position', new THREE.BufferAttribute(floatingPos, 3));
+    const floatingMat = new THREE.PointsMaterial({
+      color: 0xff758c,
+      size: 0.16,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending
+    });
+    const floatingParticles = new THREE.Points(floatingGeo, floatingMat);
+    mainGroup.add(floatingParticles);
+
+    // 6. Estrellas del Fondo
+    const starCount = 1600;
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount; i++) {
+      starPos[i * 3] = (Math.random() - 0.5) * 90;
+      starPos[i * 3 + 1] = (Math.random() - 0.5) * 90;
+      starPos[i * 3 + 2] = -20 - Math.random() * 50;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.13, transparent: true, opacity: 0.8 });
+    const bgStars = new THREE.Points(starGeo, starMat);
+    scene.add(bgStars);
+
+    // 7. MÁS NEBULOSAS (ESFERAS DE HUMO CÓSMICO)
+    function createNebulaCloud(colorHex, x, y, z, scale, opacity = 0.25) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0, colorHex);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: opacity, blending: THREE.AdditiveBlending });
+      const sprite = new THREE.Sprite(mat);
+      sprite.position.set(x, y, z);
+      sprite.scale.set(scale, scale, 1);
+      scene.add(sprite);
+      return sprite;
+    }
+
+    const nebulas = [
+      createNebulaCloud('#ff0055', -9, 6, -12, 22, 0.28),
+      createNebulaCloud('#7b2cbf', 9, -6, -14, 25, 0.25),
+      createNebulaCloud('#ff758c', 0, 0, -10, 18, 0.35),
+      createNebulaCloud('#00f5d4', -11, -7, -15, 20, 0.20),
+      createNebulaCloud('#ffb703', 10, 7, -13, 19, 0.22),
+      createNebulaCloud('#e0aaff', -3, 8, -11, 16, 0.26)
+    ];
+
+    // 8. PEQUEÑOS UNIVERSOS / MINI GALAXIAS ORBITANDO
+    function createMiniGalaxy(color1Hex, color2Hex, particleNum = 350, galRadius = 1.6) {
+      const galGroup = new THREE.Group();
+      const galGeo = new THREE.BufferGeometry();
+      const galPos = new Float32Array(particleNum * 3);
+      const galColors = new Float32Array(particleNum * 3);
+
+      const c1 = new THREE.Color(color1Hex);
+      const c2 = new THREE.Color(color2Hex);
+
+      for (let i = 0; i < particleNum; i++) {
+        const arms = 2;
+        const armIndex = i % arms;
+        const distance = Math.pow(Math.random(), 2) * galRadius;
+        const angle = (distance * 4) + ((2 * Math.PI / arms) * armIndex);
+
+        galPos[i * 3] = Math.cos(angle) * distance;
+        galPos[i * 3 + 1] = (Math.random() - 0.5) * 0.15;
+        galPos[i * 3 + 2] = Math.sin(angle) * distance;
+
+        const mixedColor = c1.clone().lerp(c2, distance / galRadius);
+        galColors[i * 3] = mixedColor.r;
+        galColors[i * 3 + 1] = mixedColor.g;
+        galColors[i * 3 + 2] = mixedColor.b;
+      }
+
+      galGeo.setAttribute('position', new THREE.BufferAttribute(galPos, 3));
+      galGeo.setAttribute('color', new THREE.BufferAttribute(galColors, 3));
+
+      const galMat = new THREE.PointsMaterial({
+        size: 0.06,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending
+      });
+
+      const galParticles = new THREE.Points(galGeo, galMat);
+      galGroup.add(galParticles);
+
+      // Núcleo brillante de la galaxia
+      const coreLightMat = new THREE.MeshBasicMaterial({
+        color: color1Hex,
+        transparent: true,
+        opacity: 0.8
+      });
+      const coreLight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), coreLightMat);
+      galGroup.add(coreLight);
+
+      return galGroup;
+    }
+
+    // Crear 4 mini-universos alrededor de la esfera principal
+    const miniUniverse1 = createMiniGalaxy(0xff758c, 0xe0aaff);
+    const miniUniverse2 = createMiniGalaxy(0x00f5d4, 0x00bfff);
+    const miniUniverse3 = createMiniGalaxy(0xffb703, 0xff4d6d);
+    const miniUniverse4 = createMiniGalaxy(0xc0a0ed, 0xffa0b4);
+
+    mainGroup.add(miniUniverse1);
+    mainGroup.add(miniUniverse2);
+    mainGroup.add(miniUniverse3);
+    mainGroup.add(miniUniverse4);
+
+    // 9. Anillos Neón Orbitando
     function createRing(rInner, rOuter, colorHex, rotX, rotY) {
       const ringGeo = new THREE.RingGeometry(rInner, rOuter, 64);
       const ringMat = new THREE.MeshBasicMaterial({
         color: colorHex,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.45
+        opacity: 0.5
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = rotX;
@@ -234,10 +447,11 @@
       return ring;
     }
 
-    const ring1 = createRing(5.6, 5.64, 0xff85a2, Math.PI / 3, Math.PI / 6);
-    const ring2 = createRing(6.4, 6.43, 0x90e0ef, -Math.PI / 4, Math.PI / 4);
+    const ring1 = createRing(5.6, 5.65, 0xff758c, Math.PI / 3, Math.PI / 6);
+    const ring2 = createRing(6.5, 6.54, 0x90e0ef, -Math.PI / 4, Math.PI / 4);
+    const ring3 = createRing(4.2, 4.23, 0xffd166, Math.PI / 2, 0);
 
-    // 6. Frases Personalizadas
+    // 10. Frases Personalizadas
     const frases = [
       "Eres Hermosa 💖",
       "Persona Admirable ⭐",
@@ -257,18 +471,18 @@
       canvas.width = 512;
       canvas.height = 128;
 
-      ctx.font = "Bold 30px 'Poppins', sans-serif";
+      ctx.font = "Bold 31px 'Poppins', sans-serif";
       ctx.textAlign = "center";
       
-      ctx.shadowColor = "#ff85a2";
-      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#ff4d6d";
+      ctx.shadowBlur = 20;
       ctx.fillStyle = "#ffffff";
       ctx.fillText(text, 256, 70);
 
       const texture = new THREE.CanvasTexture(canvas);
       const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
       const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(3.5, 0.85, 1);
+      sprite.scale.set(3.6, 0.88, 1);
       return sprite;
     }
 
@@ -277,7 +491,7 @@
       
       const phi = Math.acos(-1 + (2 * idx) / frases.length);
       const theta = Math.sqrt(frases.length * Math.PI) * phi;
-      const dist = 6.2;
+      const dist = 6.3;
 
       sprite.position.x = dist * Math.cos(theta) * Math.sin(phi);
       sprite.position.y = dist * Math.sin(theta) * Math.sin(phi);
@@ -286,7 +500,7 @@
       mainGroup.add(sprite);
     });
 
-    // 7. Animaciones de Rotación y Pulsación
+    // 11. Animaciones Dinámicas
     let clock = new THREE.Clock();
 
     function animate() {
@@ -294,15 +508,48 @@
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Rotación suave del universo
+      // Rotación principal
       mainGroup.rotation.y += 0.0025;
       coreMesh.rotation.x += 0.003;
-      innerMesh.rotation.y -= 0.005;
+      coreMesh.rotation.y += 0.002;
+      innerMesh.rotation.y -= 0.004;
+      
       ring1.rotation.z += 0.002;
-      ring2.rotation.z -= 0.002;
+      ring2.rotation.z -= 0.0025;
+      ring3.rotation.z += 0.003;
 
-      // Latido constante de la firma "Att: Dany ❤️"
-      const scalePulsate = 4.2 + Math.sin(elapsedTime * 2.5) * 0.2;
+      // Órbita y rotación propia de los Mini-Universos
+      const t = elapsedTime * 0.4;
+      miniUniverse1.position.set(Math.cos(t) * 8.5, Math.sin(t * 1.2) * 2.5, Math.sin(t) * 8.5);
+      miniUniverse1.rotation.y += 0.03;
+
+      miniUniverse2.position.set(Math.cos(t + 1.8) * 9.5, Math.sin(t * 0.8) * -3, Math.sin(t + 1.8) * 9.5);
+      miniUniverse2.rotation.y += 0.025;
+
+      miniUniverse3.position.set(Math.cos(t + 3.5) * 8, Math.sin(t * 1.5) * 3.5, Math.sin(t + 3.5) * 8);
+      miniUniverse3.rotation.y += 0.035;
+
+      miniUniverse4.position.set(Math.cos(t + 5.0) * 10, Math.sin(t * 0.9) * 2, Math.sin(t + 5.0) * 10);
+      miniUniverse4.rotation.y += 0.02;
+
+      // Movimiento ascendente de las partículas flotantes
+      const positions = floatingParticles.geometry.attributes.position.array;
+      for (let i = 0; i < floatingCount; i++) {
+        positions[i * 3 + 1] += floatingSpeed[i];
+        if (positions[i * 3 + 1] > 9) {
+          positions[i * 3 + 1] = -9;
+        }
+      }
+      floatingParticles.geometry.attributes.position.needsUpdate = true;
+
+      // Parpadeo suave del fondo y movimiento de esferas de humo
+      starMat.opacity = 0.6 + Math.sin(elapsedTime * 3) * 0.3;
+      nebulas.forEach((neb, index) => {
+        neb.rotation.z = elapsedTime * (0.01 + index * 0.003) * (index % 2 === 0 ? 1 : -1);
+      });
+
+      // Latido de la firma "Att: Dany ❤"
+      const scalePulsate = 4.3 + Math.sin(elapsedTime * 2.8) * 0.22;
       signatureSprite.scale.set(scalePulsate, scalePulsate * 0.5, 1);
 
       controls.update();
@@ -311,7 +558,7 @@
 
     animate();
 
-    // Redimensionado táctil
+    // Ajuste de pantalla
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
