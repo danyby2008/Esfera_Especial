@@ -30,7 +30,6 @@
       z-index: 1;
     }
 
-    /* Encabezado Principal */
     .ui-layer {
       position: absolute;
       top: 25px;
@@ -83,7 +82,6 @@
       pointer-events: none;
     }
 
-    /* Botón Flotante de Música */
     .music-btn {
       position: absolute;
       bottom: 25px;
@@ -127,19 +125,11 @@
     }
 
     @media (max-width: 600px) {
-      .title {
-        font-size: 1.9rem;
-      }
-      .music-btn {
-        bottom: 20px;
-        right: 15px;
-        padding: 8px 14px;
-        font-size: 0.75rem;
-      }
+      .title { font-size: 1.9rem; }
+      .music-btn { bottom: 20px; right: 15px; padding: 8px 14px; font-size: 0.75rem; }
     }
   </style>
 
-  <!-- Bibliotecas Three.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
@@ -153,19 +143,17 @@
   <div id="canvas-container"></div>
   <div class="hint">✦ Toca y desliza en la pantalla ✦</div>
 
-  <!-- Botón de Música -->
   <button id="musicToggle" class="music-btn">
     <span id="musicIcon">🎵</span>
     <span id="musicText">Música</span>
   </button>
 
-  <!-- Elemento de Audio -->
-  <audio id="bgMusic" loop preload="auto">
+  <audio id="bgMusic" loop preload="auto" crossorigin="anonymous">
     <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg" />
   </audio>
 
   <script>
-    // Configuración de audio
+    
     const musicBtn = document.getElementById('musicToggle');
     const musicIcon = document.getElementById('musicIcon');
     const musicText = document.getElementById('musicText');
@@ -173,21 +161,65 @@
 
     bgMusic.volume = 0.4;
 
-    musicBtn.addEventListener('click', () => {
-      if (bgMusic.paused) {
-        bgMusic.play();
+    let audioCtx, analyser, dataArray;
+    let audioInitialized = false;
+
+    function initAudioContext() {
+      if (audioInitialized) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        const source = audioCtx.createMediaElementSource(bgMusic);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 128;
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        audioInitialized = true;
+      } catch (e) {
+        console.log("Web Audio API no soportado o bloqueado");
+      }
+    }
+
+    function playAudio() {
+      initAudioContext();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      bgMusic.play().then(() => {
         musicBtn.classList.add('playing');
         musicIcon.textContent = '🔊';
         musicText.textContent = 'Pausar';
+      }).catch(err => {
+        console.log("Esperando interacción para reproducir.");
+      });
+    }
+
+    function pauseAudio() {
+      bgMusic.pause();
+      musicBtn.classList.remove('playing');
+      musicIcon.textContent = '🎵';
+      musicText.textContent = 'Música';
+    }
+
+    musicBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (bgMusic.paused) {
+        playAudio();
       } else {
-        bgMusic.pause();
-        musicBtn.classList.remove('playing');
-        musicIcon.textContent = '🎵';
-        musicText.textContent = 'Música';
+        pauseAudio();
       }
     });
 
-    // 1. Escena y Renderizador
+    const startAudioOnInteraction = () => {
+      if (bgMusic.paused) playAudio();
+      window.removeEventListener('click', startAudioOnInteraction);
+      window.removeEventListener('touchstart', startAudioOnInteraction);
+    };
+
+    window.addEventListener('click', startAudioOnInteraction);
+    window.addEventListener('touchstart', startAudioOnInteraction);
+
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020108);
@@ -208,7 +240,9 @@
     const mainGroup = new THREE.Group();
     scene.add(mainGroup);
 
-    // 2. Núcleo Cristalino
+    const centerLight = new THREE.PointLight(0xff758c, 2, 20);
+    mainGroup.add(centerLight);
+
     const coreGeo = new THREE.IcosahedronGeometry(2.3, 3);
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0xff2a6d,
@@ -228,7 +262,6 @@
     const innerMesh = new THREE.Mesh(innerGeo, innerMat);
     mainGroup.add(innerMesh);
 
-    // 3. FIRMA "Att: Dany ❤"
     function createCenterSignature() {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -254,7 +287,38 @@
     const signatureSprite = createCenterSignature();
     mainGroup.add(signatureSprite);
 
-    // 4. Polvo Estelar Principal
+    function createHeartShape() {
+      const shape = new THREE.Shape();
+      const x = 0, y = 0;
+      shape.moveTo(x + 0.25, y + 0.25);
+      shape.bezierCurveTo(x + 0.25, y + 0.25, x + 0.2, y, x, y);
+      shape.bezierCurveTo(x - 0.3, y, x - 0.3, y + 0.35, x - 0.3, y + 0.35);
+      shape.bezierCurveTo(x - 0.3, y + 0.55, x - 0.1, y + 0.77, x + 0.25, y + 1.0);
+      shape.bezierCurveTo(x + 0.6, y + 0.77, x + 0.8, y + 0.55, x + 0.8, y + 0.35);
+      shape.bezierCurveTo(x + 0.8, y + 0.35, x + 0.8, y, x + 0.5, y);
+      shape.bezierCurveTo(x + 0.35, y, x + 0.25, y + 0.25, x + 0.25, y + 0.25);
+      return shape;
+    }
+
+    const heartExtrudeSettings = { depth: 0.08, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.03, bevelThickness: 0.03 };
+    const heartGeo = new THREE.ExtrudeGeometry(createHeartShape(), heartExtrudeSettings);
+    heartGeo.center();
+
+    const heartsGroup = new THREE.Group();
+    const heartCount = 14;
+    const heartMat = new THREE.MeshBasicMaterial({ color: 0xff4d6d, transparent: true, opacity: 0.75, wireframe: true });
+
+    for (let i = 0; i < heartCount; i++) {
+      const mesh = new THREE.Mesh(heartGeo, heartMat);
+      const angle = (i / heartCount) * Math.PI * 2;
+      const radius = 7.5 + Math.random() * 2;
+      mesh.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 4, Math.sin(angle) * radius);
+      mesh.scale.setScalar(0.4 + Math.random() * 0.3);
+      mesh.rotation.z = Math.PI; // Orientar correctamente
+      heartsGroup.add(mesh);
+    }
+    mainGroup.add(heartsGroup);
+
     const particleCount = 2800;
     const particleGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
@@ -300,7 +364,6 @@
     const particles = new THREE.Points(particleGeo, particleMat);
     mainGroup.add(particles);
 
-    // 5. Partículas Ascendentes Flotantes
     const floatingCount = 90;
     const floatingGeo = new THREE.BufferGeometry();
     const floatingPos = new Float32Array(floatingCount * 3);
@@ -323,7 +386,6 @@
     const floatingParticles = new THREE.Points(floatingGeo, floatingMat);
     mainGroup.add(floatingParticles);
 
-    // 6. Estrellas del Fondo
     const starCount = 1600;
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(starCount * 3);
@@ -338,7 +400,19 @@
     const bgStars = new THREE.Points(starGeo, starMat);
     scene.add(bgStars);
 
-    // 7. MÁS NEBULOSAS (ESFERAS DE HUMO CÓSMICO)
+    const shootingStarGeo = new THREE.BufferGeometry();
+    const shootingStarCount = 12;
+    const shootingPos = new Float32Array(shootingStarCount * 3);
+    for(let i = 0; i < shootingStarCount; i++) {
+      shootingPos[i*3] = (Math.random() - 0.5) * 40;
+      shootingPos[i*3 + 1] = Math.random() * 20 + 10;
+      shootingPos[i*3 + 2] = -10 - Math.random() * 20;
+    }
+    shootingStarGeo.setAttribute('position', new THREE.BufferAttribute(shootingPos, 3));
+    const shootingMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.25, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+    const shootingStars = new THREE.Points(shootingStarGeo, shootingMat);
+    scene.add(shootingStars);
+
     function createNebulaCloud(colorHex, x, y, z, scale, opacity = 0.25) {
       const canvas = document.createElement('canvas');
       canvas.width = 128;
@@ -368,7 +442,7 @@
       createNebulaCloud('#e0aaff', -3, 8, -11, 16, 0.26)
     ];
 
-    // 8. PEQUEÑOS UNIVERSOS / MINI GALAXIAS ORBITANDO
+
     function createMiniGalaxy(color1Hex, color2Hex, particleNum = 350, galRadius = 1.6) {
       const galGroup = new THREE.Group();
       const galGeo = new THREE.BufferGeometry();
@@ -408,19 +482,13 @@
       const galParticles = new THREE.Points(galGeo, galMat);
       galGroup.add(galParticles);
 
-      // Núcleo brillante de la galaxia
-      const coreLightMat = new THREE.MeshBasicMaterial({
-        color: color1Hex,
-        transparent: true,
-        opacity: 0.8
-      });
+      const coreLightMat = new THREE.MeshBasicMaterial({ color: color1Hex, transparent: true, opacity: 0.8 });
       const coreLight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), coreLightMat);
       galGroup.add(coreLight);
 
       return galGroup;
     }
 
-    // Crear 4 mini-universos alrededor de la esfera principal
     const miniUniverse1 = createMiniGalaxy(0xff758c, 0xe0aaff);
     const miniUniverse2 = createMiniGalaxy(0x00f5d4, 0x00bfff);
     const miniUniverse3 = createMiniGalaxy(0xffb703, 0xff4d6d);
@@ -431,7 +499,7 @@
     mainGroup.add(miniUniverse3);
     mainGroup.add(miniUniverse4);
 
-    // 9. Anillos Neón Orbitando
+
     function createRing(rInner, rOuter, colorHex, rotX, rotY) {
       const ringGeo = new THREE.RingGeometry(rInner, rOuter, 64);
       const ringMat = new THREE.MeshBasicMaterial({
@@ -451,7 +519,7 @@
     const ring2 = createRing(6.5, 6.54, 0x90e0ef, -Math.PI / 4, Math.PI / 4);
     const ring3 = createRing(4.2, 4.23, 0xffd166, Math.PI / 2, 0);
 
-    // 10. Frases Personalizadas
+
     const frases = [
       "Eres Hermosa 💖",
       "Persona Admirable ⭐",
@@ -500,7 +568,7 @@
       mainGroup.add(sprite);
     });
 
-    // 11. Animaciones Dinámicas
+
     let clock = new THREE.Clock();
 
     function animate() {
@@ -508,17 +576,42 @@
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Rotación principal
+
+      let bassBoost = 0;
+      let trebleBoost = 0;
+
+      if (analyser && !bgMusic.paused) {
+        analyser.getByteFrequencyData(dataArray);
+  
+        let bassSum = 0;
+        for (let i = 0; i < 10; i++) bassSum += dataArray[i];
+        bassBoost = (bassSum / 10) / 255; // Valor Normalizado 0 a 1
+
+        let trebleSum = 0;
+        for (let i = 40; i < 60; i++) trebleSum += dataArray[i];
+        trebleBoost = (trebleSum / 20) / 255;
+      }
+
       mainGroup.rotation.y += 0.0025;
       coreMesh.rotation.x += 0.003;
       coreMesh.rotation.y += 0.002;
       innerMesh.rotation.y -= 0.004;
-      
+
+      heartsGroup.rotation.y -= 0.005;
+
       ring1.rotation.z += 0.002;
       ring2.rotation.z -= 0.0025;
       ring3.rotation.z += 0.003;
+      ring1.material.opacity = 0.4 + trebleBoost * 0.5;
+      ring2.material.opacity = 0.4 + trebleBoost * 0.5;
 
-      // Órbita y rotación propia de los Mini-Universos
+      const pulseScale = 1 + bassBoost * 0.35;
+      coreMesh.scale.setScalar(pulseScale);
+      innerMesh.scale.setScalar(pulseScale);
+      centerLight.intensity = 2 + bassBoost * 3;
+
+      particles.scale.setScalar(1 + bassBoost * 0.08);
+
       const t = elapsedTime * 0.4;
       miniUniverse1.position.set(Math.cos(t) * 8.5, Math.sin(t * 1.2) * 2.5, Math.sin(t) * 8.5);
       miniUniverse1.rotation.y += 0.03;
@@ -532,7 +625,6 @@
       miniUniverse4.position.set(Math.cos(t + 5.0) * 10, Math.sin(t * 0.9) * 2, Math.sin(t + 5.0) * 10);
       miniUniverse4.rotation.y += 0.02;
 
-      // Movimiento ascendente de las partículas flotantes
       const positions = floatingParticles.geometry.attributes.position.array;
       for (let i = 0; i < floatingCount; i++) {
         positions[i * 3 + 1] += floatingSpeed[i];
@@ -542,14 +634,23 @@
       }
       floatingParticles.geometry.attributes.position.needsUpdate = true;
 
-      // Parpadeo suave del fondo y movimiento de esferas de humo
+      const shootPos = shootingStars.geometry.attributes.position.array;
+      for(let i = 0; i < shootingStarCount; i++) {
+        shootPos[i*3] -= 0.3;
+        shootPos[i*3 + 1] -= 0.15;
+        if(shootPos[i*3] < -25 || shootPos[i*3 + 1] < -15) {
+          shootPos[i*3] = (Math.random() - 0.5) * 40 + 20;
+          shootPos[i*3 + 1] = Math.random() * 20 + 10;
+        }
+      }
+      shootingStars.geometry.attributes.position.needsUpdate = true;
+
       starMat.opacity = 0.6 + Math.sin(elapsedTime * 3) * 0.3;
       nebulas.forEach((neb, index) => {
         neb.rotation.z = elapsedTime * (0.01 + index * 0.003) * (index % 2 === 0 ? 1 : -1);
       });
 
-      // Latido de la firma "Att: Dany ❤"
-      const scalePulsate = 4.3 + Math.sin(elapsedTime * 2.8) * 0.22;
+      const scalePulsate = 4.3 + Math.sin(elapsedTime * 2.8) * 0.22 + (bassBoost * 0.6);
       signatureSprite.scale.set(scalePulsate, scalePulsate * 0.5, 1);
 
       controls.update();
@@ -558,7 +659,6 @@
 
     animate();
 
-    // Ajuste de pantalla
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
